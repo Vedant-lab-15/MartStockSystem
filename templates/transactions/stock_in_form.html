@@ -1,0 +1,75 @@
+{% extends "base/base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Stock In - Stock Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-arrow-circle-down"></i> Stock In (Restock)</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'transactions:transaction_list' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-list"></i> Transaction History
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Add Stock</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.product|as_crispy_field }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.quantity|as_crispy_field }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.unit_price|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    {{ form.notes|as_crispy_field }}
+                    {{ form.transaction_type }}
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i> Add Stock
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Help Panel -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Help</h5>
+            </div>
+            <div class="card-body">
+                <h6>Stock In Guide</h6>
+                <ul>
+                    <li><strong>Product:</strong> Select the product you are adding stock for.</li>
+                    <li><strong>Quantity:</strong> Enter the number of units being added.</li>
+                    <li><strong>Cost Price Per Unit:</strong> The price you paid per unit.</li>
+                    <li><strong>Notes:</strong> Optional information about this restock (e.g., supplier name, order number).</li>
+                </ul>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Tip:</strong> Stock quantity will be automatically updated when you submit this form.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+/* Custom styles for Stock Management System */
+
+.bg-low-stock {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.stock-status {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-ok {
+    background-color: #198754;
+}
+
+.status-low {
+    background-color: #ffc107;
+}
+
+.status-out {
+    background-color: #dc3545;
+}
+
+.avatar-sm {
+    height: 2.5rem;
+    width: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-title {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Dashboard cards */
+.card {
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+    border: none;
+}
+
+.card-header {
+    border-top-left-radius: 0.5rem !important;
+    border-top-right-radius: 0.5rem !important;
+}
+
+/* Print styles */
+@media print {
+    .sidebar, .navbar, footer, .btn-toolbar, form, .card-footer {
+        display: none !important;
+    }
+    
+    .content {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+        margin-bottom: 1rem !important;
+    }
+}

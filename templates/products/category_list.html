@@ -1,0 +1,83 @@
+{% extends "base/base.html" %}
+
+{% block title %}Categories - Stock Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-tags"></i> Categories</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        {% if perms.products.add_category %}
+        <a href="{% url 'products:category_create' %}" class="btn btn-sm btn-primary">
+            <i class="fas fa-plus"></i> Add Category
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if categories %}
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Category List</h5>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Products</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'products:category_detail' slug=category.slug %}" class="text-decoration-none">
+                                {{ category.name }}
+                            </a>
+                        </td>
+                        <td>{{ category.description|truncatewords:10 }}</td>
+                        <td>{{ category.products.count }}</td>
+                        <td>{{ category.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'products:category_detail' slug=category.slug %}" 
+                                   class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if perms.products.change_category %}
+                                <a href="{% url 'products:category_update' slug=category.slug %}" 
+                                   class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% endif %}
+                                {% if perms.products.delete_category and category.products.count == 0 %}
+                                <a href="{% url 'products:category_delete' slug=category.slug %}" 
+                                   class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <h5><i class="fas fa-info-circle me-2"></i>No categories found</h5>
+    <p>There are no product categories defined yet.</p>
+    {% if perms.products.add_category %}
+    <a href="{% url 'products:category_create' %}" class="btn btn-primary">Add Category</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

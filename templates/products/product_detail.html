@@ -1,0 +1,186 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ product.name }} - Stock Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">{{ product.name }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            {% if perms.products.change_product %}
+            <a href="{% url 'products:product_update' slug=product.slug %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            {% endif %}
+            {% if perms.products.delete_product %}
+            <a href="{% url 'products:product_delete' slug=product.slug %}" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-trash-alt"></i> Delete
+            </a>
+            {% endif %}
+        </div>
+        <div class="btn-group">
+            <a href="{% url 'products:product_list' %}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Product Details -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Product Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Basic Information</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <th>SKU:</th>
+                                    <td>{{ product.sku }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Category:</th>
+                                    <td>
+                                        <a href="{% url 'products:category_detail' slug=product.category.slug %}">
+                                            {{ product.category.name }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Status:</th>
+                                    <td>
+                                        {% if product.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Created:</th>
+                                    <td>{{ product.created_at|date:"M d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Last Updated:</th>
+                                    <td>{{ product.updated_at|date:"M d, Y" }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6>Pricing & Stock</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <th>Price:</th>
+                                    <td>${{ product.price|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Cost Price:</th>
+                                    <td>${{ product.cost_price|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Profit Margin:</th>
+                                    <td>{{ product.profit_margin|floatformat:1 }}%</td>
+                                </tr>
+                                <tr>
+                                    <th>Current Stock:</th>
+                                    <td>
+                                        {% if product.is_low_stock %}
+                                        <span class="badge bg-warning text-dark">{{ product.stock_quantity }}</span>
+                                        {% else %}
+                                        {{ product.stock_quantity }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Low Stock Threshold:</th>
+                                    <td>{{ product.low_stock_threshold }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                {% if product.description %}
+                <div class="mb-3">
+                    <h6>Description</h6>
+                    <p>{{ product.description }}</p>
+                </div>
+                {% endif %}
+                
+                {% if product.image %}
+                <div class="mb-3">
+                    <h6>Product Image</h6>
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid img-thumbnail" style="max-height: 200px;">
+                </div>
+                {% endif %}
+                
+                <div class="d-flex justify-content-end mt-3">
+                    {% if perms.transactions.add_transaction %}
+                    <a href="{% url 'transactions:stock_in' %}?product={{ product.id }}" class="btn btn-success me-2">
+                        <i class="fas fa-plus"></i> Add Stock
+                    </a>
+                    <a href="{% url 'transactions:stock_out' %}?product={{ product.id }}" class="btn btn-danger me-2">
+                        <i class="fas fa-minus"></i> Remove Stock
+                    </a>
+                    <a href="{% url 'transactions:stock_adjustment' %}?product={{ product.id }}" class="btn btn-info">
+                        <i class="fas fa-balance-scale"></i> Adjust Stock
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Transactions History -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Transactions</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for transaction in transactions %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                {% if transaction.transaction_type == 'IN' %}
+                                <span class="badge bg-success me-2">Stock In</span>
+                                {% elif transaction.transaction_type == 'OUT' %}
+                                <span class="badge bg-danger me-2">Stock Out</span>
+                                {% else %}
+                                <span class="badge bg-info me-2">Adjustment</span>
+                                {% endif %}
+                                {{ transaction.quantity }} units
+                            </h6>
+                            <small>{{ transaction.created_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                        <p class="mb-1">${{ transaction.unit_price|floatformat:2 }} per unit</p>
+                        <small>By: {{ transaction.created_by.username }}</small>
+                        {% if transaction.notes %}
+                        <div class="mt-1 text-muted">Note: {{ transaction.notes }}</div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item">
+                        <p class="mb-0 text-center">No transactions found for this product.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                <a href="{% url 'transactions:transaction_list' %}?product={{ product.id }}" class="btn btn-sm btn-outline-primary">
+                    View All Transactions
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

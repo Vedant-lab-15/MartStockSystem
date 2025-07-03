@@ -1,0 +1,16 @@
+{% extends "base/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Category Form - Stock Management System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{% if form.instance.pk %}Edit{% else %}Create{% endif %} Category</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="{% url 'products:category_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

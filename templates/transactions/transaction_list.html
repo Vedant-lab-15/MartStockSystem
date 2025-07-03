@@ -1,0 +1,196 @@
+{% extends "base/base.html" %}
+{% load transaction_extras %}
+
+{% block title %}Transactions - Stock Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-exchange-alt"></i> Transactions</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            {% if perms.transactions.add_transaction %}
+            <a href="{% url 'transactions:stock_in' %}" class="btn btn-sm btn-success">
+                <i class="fas fa-plus"></i> Stock In
+            </a>
+            <a href="{% url 'transactions:stock_out' %}" class="btn btn-sm btn-danger">
+                <i class="fas fa-minus"></i> Stock Out
+            </a>
+            <a href="{% url 'transactions:stock_adjustment' %}" class="btn btn-sm btn-info">
+                <i class="fas fa-balance-scale"></i> Adjustment
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" action="">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Product</label>
+                    <select name="product" class="form-select">
+                        <option value="">All Products</option>
+                        {% for product in products %}
+                        <option value="{{ product.id }}" {% if product_id == product.id|stringformat:"i" %}selected{% endif %}>
+                            {{ product.name }} ({{ product.sku }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Transaction Type</label>
+                    <select name="type" class="form-select">
+                        <option value="">All Types</option>
+                        {% for type_code, type_name in transaction_types %}
+                        <option value="{{ type_code }}" {% if transaction_type == type_code %}selected{% endif %}>
+                            {{ type_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+                </div>
+            </div>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i>Apply Filters
+                </button>
+                <a href="{% url 'transactions:transaction_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-redo me-2"></i>Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if transactions %}
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Transaction History</h5>
+            <span>Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ paginator.count }} transactions</span>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Product</th>
+                        <th>Type</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                        <th>Created By</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.created_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'products:product_detail' slug=transaction.product.slug %}" class="text-decoration-none">
+                                {{ transaction.product.name }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if transaction.transaction_type == 'IN' %}
+                                <span class="badge bg-success">Stock In</span>
+                            {% elif transaction.transaction_type == 'OUT' %}
+                                <span class="badge bg-danger">Stock Out</span>
+                            {% else %}
+                                <span class="badge bg-info">Adjustment</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ transaction.quantity }}</td>
+                        <td>${{ transaction.unit_price|floatformat:2 }}</td>
+                        <td>${{ transaction.quantity|floatformat:0|mul:transaction.unit_price|floatformat:2 }}</td>
+                        <td>{{ transaction.created_by.username }}</td>
+                        <td>
+                            <a href="{% url 'transactions:transaction_detail' pk=transaction.id %}" 
+                               class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="card-footer">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if product_id %}&product={{ product_id }}{% endif %}{% if transaction_type %}&type={{ transaction_type }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if product_id %}&product={{ product_id }}{% endif %}{% if transaction_type %}&type={{ transaction_type }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">Previous</a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item disabled">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if product_id %}&product={{ product_id }}{% endif %}{% if transaction_type %}&type={{ transaction_type }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if product_id %}&product={{ product_id }}{% endif %}{% if transaction_type %}&type={{ transaction_type }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">Last</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    <h5><i class="fas fa-info-circle me-2"></i>No transactions found</h5>
+    <p>There are no transactions matching your criteria.</p>
+    {% if perms.transactions.add_transaction %}
+    <div class="mt-3">
+        <a href="{% url 'transactions:stock_in' %}" class="btn btn-success me-2">
+            <i class="fas fa-plus"></i> Add Stock In
+        </a>
+        <a href="{% url 'transactions:stock_out' %}" class="btn btn-danger me-2">
+            <i class="fas fa-minus"></i> Add Stock Out
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Custom filter for multiplication in the template
+    var filters = {
+        mul: function(a, b) {
+            return a * b;
+        }
+    };
+    
+    // This is a placeholder since Django templates don't support custom filters in HTML
+    // In a real application, you would register a proper Django template filter
+</script>
+{% endblock %}

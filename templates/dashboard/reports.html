@@ -1,0 +1,322 @@
+{% extends "base/base.html" %}
+{% load transaction_extras %}
+
+{% block title %}Reports - Stock Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-chart-bar"></i> Reports</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Report Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Report Filters</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" action="">
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Report Type</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="type" id="stockReport" value="stock" {% if report_type == 'stock' %}checked{% endif %}>
+                        <label class="btn btn-outline-primary" for="stockReport">Stock Levels</label>
+                        
+                        <input type="radio" class="btn-check" name="type" id="salesReport" value="sales" {% if report_type == 'sales' %}checked{% endif %}>
+                        <label class="btn btn-outline-primary" for="salesReport">Sales Analysis</label>
+                        
+                        <input type="radio" class="btn-check" name="type" id="profitReport" value="profit" {% if report_type == 'profit' %}checked{% endif %}>
+                        <label class="btn btn-outline-primary" for="profitReport">Profit Analysis</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Time Period</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="period" id="period7" value="7" {% if time_period == '7' %}checked{% endif %}>
+                        <label class="btn btn-outline-secondary" for="period7">7 Days</label>
+                        
+                        <input type="radio" class="btn-check" name="period" id="period30" value="30" {% if time_period == '30' %}checked{% endif %}>
+                        <label class="btn btn-outline-secondary" for="period30">30 Days</label>
+                        
+                        <input type="radio" class="btn-check" name="period" id="period90" value="90" {% if time_period == '90' %}checked{% endif %}>
+                        <label class="btn btn-outline-secondary" for="period90">90 Days</label>
+                    </div>
+                </div>
+            </div>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i>Generate Report
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Report Content -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            {% if report_type == 'stock' %}
+                <i class="fas fa-boxes me-2"></i>Stock Level Report
+            {% elif report_type == 'sales' %}
+                <i class="fas fa-shopping-cart me-2"></i>Sales Analysis ({{ start_date }} to {{ end_date }})
+            {% elif report_type == 'profit' %}
+                <i class="fas fa-dollar-sign me-2"></i>Profit Analysis ({{ start_date }} to {{ end_date }})
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if report_type == 'stock' %}
+            <!-- Stock Level Report -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Products</h5>
+                            <h3>{{ products|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Low Stock Items</h5>
+                            <h3>{{ low_stock_count }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Categories</h5>
+                            <h3>{{ categories|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h5 class="mb-3">Stock by Category</h5>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Total Products</th>
+                            <th>Low Stock Items</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr>
+                            <td>{{ category.name }}</td>
+                            <td>{{ category.products.count }}</td>
+                            <td>{{ category.products.all|filter_low_stock|length }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <h5 class="mb-3 mt-4">Low Stock Items</h5>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>SKU</th>
+                            <th>Category</th>
+                            <th>Current Stock</th>
+                            <th>Threshold</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                            {% if product.is_low_stock %}
+                            <tr>
+                                <td>{{ product.name }}</td>
+                                <td>{{ product.sku }}</td>
+                                <td>{{ product.category.name }}</td>
+                                <td>
+                                    <span class="badge bg-warning text-dark">{{ product.stock_quantity }}</span>
+                                </td>
+                                <td>{{ product.low_stock_threshold }}</td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+        {% elif report_type == 'sales' %}
+            <!-- Sales Analysis Report -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Sales</h5>
+                            <h3>${{ total_sales|floatformat:2 }}</h3>
+                            <p class="text-muted">{{ start_date }} to {{ end_date }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h5 class="mb-3">Daily Sales Trend</h5>
+            <div style="height: 300px;">
+                <canvas id="dailySalesChart"></canvas>
+            </div>
+            
+            <h5 class="mb-3 mt-4">Top Selling Products</h5>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity Sold</th>
+                            <th>Total Sales</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in product_sales %}
+                        <tr>
+                            <td>{{ item.product__name }}</td>
+                            <td>{{ item.count }}</td>
+                            <td>${{ item.total_amount|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <h5 class="mb-3 mt-4">Sales by Category</h5>
+            <div style="height: 300px;">
+                <canvas id="categorySalesChart"></canvas>
+            </div>
+            
+        {% elif report_type == 'profit' %}
+            <!-- Profit Analysis Report -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Profit</h5>
+                            <h3>${{ total_profit|floatformat:2 }}</h3>
+                            <p class="text-muted">{{ start_date }} to {{ end_date }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h5 class="mb-3">Product Profitability</h5>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity Sold</th>
+                            <th>Sales Value</th>
+                            <th>Cost Value</th>
+                            <th>Profit</th>
+                            <th>Margin (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in product_profits %}
+                        <tr>
+                            <td>{{ item.product.name }}</td>
+                            <td>{{ item.quantity_sold }}</td>
+                            <td>${{ item.sales_value|floatformat:2 }}</td>
+                            <td>${{ item.cost_value|floatformat:2 }}</td>
+                            <td>${{ item.profit|floatformat:2 }}</td>
+                            <td>{{ item.margin|floatformat:1 }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% if report_type == 'sales' %}
+<script>
+    // Daily sales chart
+    const dailySalesCtx = document.getElementById('dailySalesChart').getContext('2d');
+    const dailySalesChart = new Chart(dailySalesCtx, {
+        type: 'line',
+        data: {
+            labels: [{% for item in daily_sales %}'{{ item.day|date:"M d" }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Daily Sales',
+                data: [{% for item in daily_sales %}{{ item.total_amount }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Category sales chart
+    const categorySalesCtx = document.getElementById('categorySalesChart').getContext('2d');
+    const categorySalesChart = new Chart(categorySalesCtx, {
+        type: 'pie',
+        data: {
+            labels: [{% for item in category_sales %}'{{ item.product__category__name }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            datasets: [{
+                data: [{% for item in category_sales %}{{ item.total_amount }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 159, 64, 0.6)',
+                    'rgba(199, 199, 199, 0.6)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            let value = context.raw || 0;
+                            let sum = context.dataset.data.reduce((a, b) => a + b, 0);
+                            let percentage = Math.round(value * 100 / sum);
+                            return label + ': $' + value + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}
