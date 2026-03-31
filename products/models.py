@@ -66,6 +66,6 @@ class Product(models.Model):
     
     @property
     def profit_margin(self):
-        if self.cost_price > 0:
-            return ((self.price - self.cost_price) / self.price) * 100
+        if self.cost_price and float(self.cost_price) > 0:
+            return ((float(self.price) - float(self.cost_price)) / float(self.price)) * 100
         return 0

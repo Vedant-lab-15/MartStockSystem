@@ -12,7 +12,8 @@ urlpatterns = [
     path('', include('dashboard.urls')),
     path('products/', include('products.urls')),
     path('transactions/', include('transactions.urls')),
-    
+    path('api/v1/', include('api_urls')),
+
     # Authentication URLs
     path('login/', auth_views.LoginView.as_view(template_name='base/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
